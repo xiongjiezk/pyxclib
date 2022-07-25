@@ -599,14 +599,20 @@ class Metrics(object):
         eval_flags = _eval_flags(indices, true_labels, None)
         prec = _precision(eval_flags, K)
         ndcg = _ndcg(eval_flags, n, K)
+
+        _total_pos[_total_pos == 0] = 1
+        _total_pos = 1 / _total_pos
+        recall_value = _recall(eval_flags, _total_pos, K)
+
         if self.inv_psp is not None:
             eval_flags = np.multiply(inv_psp[indices], eval_flags)
             ps_eval_flags = _eval_flags(ps_indices, true_labels, inv_psp)
             PSprec = _precision(eval_flags, K)/_precision(ps_eval_flags, K)
             PSnDCG = _ndcg(eval_flags, n, K)/_ndcg(ps_eval_flags, n, K)
-            return [prec, ndcg, PSprec, PSnDCG]
+            PSrecall = _ndcg(eval_flags, _total_pos, K)/_ndcg(ps_eval_flags, _total_pos, K)
+            return [prec, ndcg, recall_value, PSprec, PSnDCG, PSrecall]
         else:
-            return [prec, ndcg]
+            return [prec, ndcg, recall_value]
 
 
 class Metrices(Metrics):

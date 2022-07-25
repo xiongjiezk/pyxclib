@@ -5,6 +5,7 @@ import sys
 from xclib.data import data_utils
 from xclib.utils.text import BoWFeatures
 from xclib.utils.sparse import ll_to_sparse
+import numpy as np
 
 
 def read(fname):
@@ -17,6 +18,19 @@ def read(fname):
         labels.append(line['target_ind'])
     return text, labels
 
+def read_raw(fname):
+    labels = []
+    text = []
+    with open(fname % "raw_texts", "r") as f:
+        for line in f.readlines():
+            title = line.split("/SEP/")[0]
+            text.append(title)
+    with open(fname % "labels", "r") as f:
+        for line in f.readlines():
+            label = [int(x) for x in line.strip().split(" ")]
+            labels.append(label)
+    assert len(text) == len(labels)
+    return text, labels
 
 def max_feature_index(trn_labels, tst_labels):
     max_ind = max([max(item) for item in trn_labels])
@@ -25,7 +39,7 @@ def max_feature_index(trn_labels, tst_labels):
 
 def process(trn_fname, tst_fname, encoding='latin',
             min_df=2, dtype=np.float32):
-    trn_text, trn_labels = read(trn_fname)
+    trn_text, trn_labels = read_raw(trn_fname)
 
     # feature extractor
     fex = BoWFeatures(encoding=encoding, min_df=min_df, dtype=dtype)
@@ -36,7 +50,7 @@ def process(trn_fname, tst_fname, encoding='latin',
     del trn_text
 
     # do test
-    tst_text, tst_labels = read(tst_fname)
+    tst_text, tst_labels = read_raw(tst_fname)
     tst_features = fex.transform(tst_text)
     del tst_text
 
